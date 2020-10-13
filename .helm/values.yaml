@@ -1,0 +1,104 @@
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+enableMongo: true
+enableCertIssuer: true
+
+ingress:
+  hostname: ptahapi.tst.protocol.one
+  pathApi: /api
+  pathLandings: /
+  hostnamePrefix:
+
+certIssuer:
+  email: admin@protocol.one
+
+app:
+  name: p1ptahapi
+  replicas: 1
+  mountPath: /etc/nginx/landings/
+
+backend:
+  name: nodejs
+  role: backend
+  image: "p1hub/p1ptahapi"
+  imageTag: latest
+  port: 3000
+  service:
+    type: ClusterIP
+    port: 3000
+    protocol: TCP
+  env:
+    - MONGO_DSN
+    - DB_USER
+    - DB_PASS
+    - CORS_VALID_ORIGINS
+    - SENTRY_DSN
+    - SERVER_PORT
+    - PASSWORD_SECRET
+    - AUTH_TOKEN_SECRET
+    - AUTH_CHECK_USER_AGENT
+    - AUTH_CHECK_IP
+    - ACCESS_TOKEN_LIFETIME
+    - REFRESH_TOKEN_LIFETIME
+    - CONFIRM_EMAIL_LIFETIME
+    - RESTORE_PASSWORD_LIFETIME
+    - RESTORE_PASSWORD_SECRET
+    - CONFIRM_EMAIL_SECRET
+    - PUBLIC_HOST
+    - LANDINGS_PUBLISHING_HOST
+    - EMAIL_POSTMARK_TOKEN
+    - EMAIL_SENDER_FROM
+    - EMAIL_TEMPLATE_RESTORE_PASSWORD_REQUEST
+    - EMAIL_TEMPLATE_RESTORE_PASSWORD
+    - EMAIL_TEMPLATE_CONFIRM_EMAIL
+    - EMAIL_TEMPLATE_USER_SIGNUP_LOCAL
+    - EMAIL_TEMPLATE_USER_SIGNUP_SOCIAL
+    - MAILCHIMP_AUTH_CLIENT_ID
+    - MAILCHIMP_AUTH_CLIENT_SECRET
+    - GOOGLE_AUTH_CLIENT_ID
+    - GOOGLE_AUTH_CLIENT_SECRET
+    - S3_ACCESS_KEY_ID
+    - S3_SECRET_ACCESS_KEY
+    - S3_BUCKET
+    - S3_REGION
+    - CDN_HOST
+    - CDN_PATH
+    - MAX_FILE_SIZE
+    - ENABLE_TRANSACTIONS
+    - STRIPE_PUBLISHABLE_KEY
+    - STRIPE_SECRET_KEY
+    - STRIPE_WEBHOOK_SECRET
+
+frontend:
+  name: nginx
+  role: frontend
+  image: ""
+  imageTag: ""
+  ngxImage: "p1hub/ptah-nginx"
+  ngxImageTag: v1.0
+  port: 80
+  service:
+    type: ClusterIP
+    port: 8080
+    protocol: TCP
+  configMap:
+    mountPath: /etc/nginx/conf.d/
+
+resources: {}
+  # We usually recommend not to specify default resources and to leave this as a conscious
+  # choice for the user. This also increases chances charts run on environments with little
+  # resources, such as Minikube. If you do want to specify resources, uncomment the following
+  # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
+  # limits:
+  #  cpu: 100m
+  #  memory: 128Mi
+  # requests:
+  #  cpu: 100m
+  #  memory: 128Mi
+
+nodeSelector: {}
+
+tolerations: []
+
+affinity: {}

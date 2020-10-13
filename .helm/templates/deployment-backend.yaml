@@ -1,0 +1,112 @@
+{{- $depBack := .Values.backend -}}
+{{- $depBackName := printf "%s-%s" .Release.Name $depBack.name }}
+{{- $depFront := .Values.frontend -}}
+{{- $depFrontName := printf "%s-%s" .Release.Name $depFront.name }}
+kind: PersistentVolume
+apiVersion: v1
+metadata:
+  annotations:
+    "helm.sh/resource-policy": keep
+  name: {{ .Release.Name }}-share
+  labels:
+    app: {{ .Release.Name }}
+spec:
+  persistentVolumeReclaimPolicy: Retain
+  capacity:
+    storage: 10Gi
+  accessModes:
+    - ReadWriteMany
+  nfs:
+    server: nfs-share
+    path: "/home/nfsroot/k8sdata/{{ .Release.Name }}-share"
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: {{ .Release.Name }}-share
+spec:
+  storageClassName: ""
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}  
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Release.Name }}
+  labels:
+    app: {{ .Release.Name }}
+    chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+    release: {{ .Release.Name }}
+    heritage: {{ .Release.Service }}
+  annotations: 
+    released: {{ .Release.Time}}    
+spec:
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}
+      chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+      release: {{ .Release.Name }}
+      heritage: {{ .Release.Service }}
+  replicas: {{ .Values.app.replicas }} 
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}
+        chart: "{{ .Chart.Name }}-{{ .Chart.Version }}"
+        release: {{ .Release.Name }}
+        heritage: {{ .Release.Service }}
+    spec:
+      volumes:
+      - name: {{ .Release.Name }}-share
+        persistentVolumeClaim:
+          claimName: {{ .Release.Name }}-share
+      - name: {{ $depFrontName }}-configmap
+        configMap:
+          name: {{ $depFrontName }}-configmap
+      serviceAccountName: {{ .Release.Name }}
+      containers:
+      - name: {{ $depBack.name }}
+        image: {{ $depBack.image }}:{{ $depBack.imageTag }}
+        env:
+        {{- range .Values.backend.env }}
+        - name: {{ . }}
+          valueFrom:
+            secretKeyRef:
+              name: {{ $depBackName }}-env
+              key: {{ . }}
+        {{- end }}
+        ports:
+        - containerPort: {{$depBack.port}}
+        volumeMounts:
+        - name: {{ .Release.Name }}-share
+          mountPath: {{ .Values.app.mountPath }}
+          readOnly: false
+      - name: {{ $depFront.name }}
+        image: {{ $depFront.ngxImage }}:{{ $depFront.ngxImageTag }}
+        ports:
+        - containerPort: {{ $depFront.port }}
+        livenessProbe:
+          httpGet:
+            path: /_healthz
+            port: {{ $depFront.port }}
+          initialDelaySeconds: 5
+          timeoutSeconds: 3
+          failureThreshold: 2
+        volumeMounts:
+        - name: {{ $depFrontName }}-configmap
+          mountPath: {{ $depFront.configMap.mountPath }}
+          readOnly: true
+        - name: {{ .Release.Name }}-share
+          mountPath: {{ .Values.app.mountPath }}
+          readOnly: false
