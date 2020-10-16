@@ -58,6 +58,7 @@ class User {
      */
     constructor(ctx, params, user) {
         params = params || {};
+        console.log('💥', params)
         if (Object.values(params).filter(Boolean).length < 5) {
             throw new Error("not enough params to init user");
         }

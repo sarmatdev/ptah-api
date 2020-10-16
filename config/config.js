@@ -12,7 +12,7 @@ const nginxConfigsDir = getEnvVariable('NGINX_CONFIGS_DIR', 'sites_enabled');
 const config = {
     serverPort: +getEnvVariable('SERVER_PORT', 3000),
 
-    mongoDsn: getEnvVariable('MONGO_DSN', 'mongodb+srv://sarmat:AdUN3rcUbpEVuif@cluster0.awznj.mongodb.net/test'),
+    mongoDsn: getEnvVariable('MONGO_DSN', ''),
 
     publicHost: getEnvVariable('PUBLIC_HOST', 'http://127.0.0.1'),
 
@@ -64,10 +64,10 @@ const config = {
 
     passwordSecret: getEnvVariable('PASSWORD_SECRET', 'secret'),
 
-    restorePasswordSecret: getEnvVariable('RESTORE_PASSWORD_SECRET', ''),
+    restorePasswordSecret: getEnvVariable('RESTORE_PASSWORD_SECRET', 'secret'),
     restorePasswordLifetime: +getEnvVariable('RESTORE_PASSWORD_LIFETIME', 15) * 60,
 
-    confirmEmailSecret: getEnvVariable('CONFIRM_EMAIL_SECRET', ''),
+    confirmEmailSecret: getEnvVariable('CONFIRM_EMAIL_SECRET', 'secret'),
     confirmEmailLifetime: +getEnvVariable('CONFIRM_EMAIL_LIFETIME', 24) * 60 * 60,
 
     emailpostmarkToken: getEnvVariable('EMAIL_POSTMARK_TOKEN', ''),

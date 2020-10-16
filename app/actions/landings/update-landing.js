@@ -17,7 +17,8 @@ module.exports = async (ctx, next) => {
     const previewUrl = (body.previewUrl || '').trim();
     const landingUpdate = body.landing;
     const baseVersion = +(body.baseVersion || '');
-
+    const html = body.html;
+    
     const update = {};
     if (name) {
         update.name = name;
@@ -26,26 +27,27 @@ module.exports = async (ctx, next) => {
         update.previewUrl = previewUrl;
     }
     if (landingUpdate && !_.isEmpty(landingUpdate)) {
-        update.landing = landingUpdate;
+        // update.landing = landingUpdate;
+        update.landing = html;
     }
-
+    
     if (_.isEmpty(update) || !baseVersion) {
         return ctx.throw(400, BAD_REQUEST);
     }
-
+    
     let data = {};
     try {
         const landings = await findLandings(ctx, false, [id]);
         const landing = landings[0];
         if (landing) {
-
+            
             // prevent inconsistent updates
             if (landing.currentVersion !== baseVersion) {
                 return ctx.throw(412, PRECONDITION_FAILED);
             }
-
+            
             data = updateLandingData(ctx, landing, update);
-
+            
             const collection = getDbCollection.landings(ctx);
 
             await ctx.mongoTransaction(

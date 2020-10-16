@@ -18,6 +18,7 @@ module.exports = function () {
         currentVersion: 0,
         previewUrl: '',
         isDeleted: false,
-        landing: {}
+        landing: {},
+        html: ''
     }
 };
